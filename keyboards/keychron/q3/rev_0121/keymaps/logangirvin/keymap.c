@@ -16,9 +16,6 @@
 
 #include QMK_KEYBOARD_H
 
-bool is_siri_active = false;
-uint32_t siri_timer = 0;
-
 enum layers{
     MAC_BASE,
     MAC_FN,
@@ -49,10 +46,10 @@ typedef struct PACKED {
 } key_combination_t;
 
 key_combination_t key_comb_list[4] = {
-    {2, {KC_LWIN, KC_TAB}},
-    {2, {KC_LWIN, KC_E}},
-    {3, {KC_LSFT, KC_LCMD, KC_4}},
-    {2, {KC_LWIN, KC_C}}
+    {2, {KC_LWIN, KC_TAB}},             // KC_TASK
+    {2, {KC_LWIN, KC_E}},               // KC_FLXP
+    {3, {KC_LSFT, KC_LCMD, KC_4}},      // KC_SNAP
+    {2, {KC_LWIN, KC_C}}                // KC_CRTA
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -98,15 +95,7 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
 };
 #endif
 
-void matrix_scan_user(void) {
-    if (is_siri_active) {
-        if (sync_timer_elapsed32(siri_timer) >= 500) {
-            unregister_code(KC_LCMD);
-            unregister_code(KC_SPACE);
-            is_siri_active = false;
-        }
-    }
-}
+// void matrix_scan_user(void) {}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -125,13 +114,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;  // Skip all further processing of this key
         case KC_SIRI:
+        case KC_CRTA:
             if (record->event.pressed) {
-                    if (!is_siri_active) {
-                    is_siri_active = true;
-                    register_code(KC_LCMD);
-                    register_code(KC_SPACE);
-                }
-                siri_timer = sync_timer_read32();
+                // toggle mute
+                SEND_STRING(SS_LCTL(SS_LSFT("M")));
             } else {
                 // Do something else when release
             }
@@ -139,7 +125,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_TASK:
         case KC_FLXP:
         case KC_SNAP:
-        case KC_CRTA:
             if (record->event.pressed) {
                 for (uint8_t i = 0; i < key_comb_list[keycode - KC_TASK].len; i++) {
                     register_code(key_comb_list[keycode - KC_TASK].keycode[i]);
