@@ -112,3 +112,5 @@
 
 /* Triggers RGB keypress events on key down. This makes RGB control feel more responsive. This may cause RGB to not function properly on some boards */
 // #define RGB_TRIGGER_ON_KEYDOWN
+
+#define RGB_MATRIX_STARTUP_MODE ENABLE_RGB_MATRIX_TYPING_HEATMAP
