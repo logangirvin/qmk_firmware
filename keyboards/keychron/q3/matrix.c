@@ -34,8 +34,8 @@ static pin_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
 #define ROWS_PER_HAND (MATRIX_ROWS)
 
 /* matrix state(1:on, 0:off) */
-extern matrix_row_t raw_matrix[MATRIX_ROWS]; // raw values
-extern matrix_row_t matrix[MATRIX_ROWS];     // debounced values
+// extern matrix_row_t raw_matrix[MATRIX_ROWS]; // raw values
+// extern matrix_row_t matrix[MATRIX_ROWS];     // debounced values
 
 static inline void setPinOutput_writeLow(pin_t pin) {
     ATOMIC_BLOCK_FORCEON {
@@ -80,13 +80,32 @@ static void shiftOut(uint8_t dataOut) {
     setPinOutput_writeLow(LATCH_PIN);
 }
 
+static void shiftout_single(uint8_t data) {
+    if (data & 0x1) {
+        setPinOutput_writeHigh(DATA_PIN);
+    } else {
+        setPinOutput_writeLow(DATA_PIN);
+    }
+
+    setPinOutput_writeHigh(CLOCK_PIN);
+    setPinOutput_writeLow(CLOCK_PIN);
+
+    setPinOutput_writeHigh(LATCH_PIN);
+    setPinOutput_writeLow(LATCH_PIN);
+}
+
 static bool select_col(uint8_t col) {
     pin_t pin = col_pins[col];
+
     if (pin != NO_PIN) {
         setPinOutput_writeLow(pin);
         return true;
     } else {
-        shiftOut(~(0x1 << (MATRIX_COLS - col - 1)));
+        if (col == 8) {
+            shiftout_single(0x00);
+        } else {
+            shiftout_single(0x01);
+        }
         return true;
     }
     return false;
@@ -101,15 +120,10 @@ static void unselect_col(uint8_t col) {
         setPinInputHigh_atomic(pin);
 #endif
     } else {
-        shiftOut(0xFF);
+        if (col == (MATRIX_COLS - 1))
+            shiftout_single(0x01);
     }
 }
-
-// static void unselect_cols(void) {
-//     for (uint8_t x = 0; x < MATRIX_COLS; x++) {
-//         unselect_col(x);
-//     }
-// }
 
 static void unselect_cols(void) {
     // unselect column pins
@@ -122,10 +136,10 @@ static void unselect_cols(void) {
             setPinInputHigh_atomic(pin);
 #endif
         }
+        if (x == (MATRIX_COLS - 1))
+            // unselect Shift Register
+            shiftOut(0xFF);
     }
-
-    // unselect Shift Register
-    shiftOut(0xFF);
 }
 
 static void matrix_init_pins(void) {
