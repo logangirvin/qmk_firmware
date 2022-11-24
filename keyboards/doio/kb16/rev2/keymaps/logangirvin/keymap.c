@@ -27,9 +27,9 @@
 
 enum layer_names {
     _BASE,
-    _FN,
-    _FN1,
-    _FN2
+    GAME,
+    CALL,
+    CODE
 };
 
 // enum layer_keycodes { };
@@ -50,7 +50,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*  Row:    0                         1                         2                         3                         4      */
     [_BASE] = LAYOUT(
                 PROGRAMMABLE_BUTTON_1,    PROGRAMMABLE_BUTTON_2,    PROGRAMMABLE_BUTTON_3,    PROGRAMMABLE_BUTTON_4,     KC_MPLY,
-                PROGRAMMABLE_BUTTON_5,    PROGRAMMABLE_BUTTON_6,    PROGRAMMABLE_BUTTON_7,    PROGRAMMABLE_BUTTON_8,     TO(_FN),
+                PROGRAMMABLE_BUTTON_5,    PROGRAMMABLE_BUTTON_6,    PROGRAMMABLE_BUTTON_7,    PROGRAMMABLE_BUTTON_8,     TO(GAME),
                 PROGRAMMABLE_BUTTON_9,    PROGRAMMABLE_BUTTON_10,   PROGRAMMABLE_BUTTON_11,   PROGRAMMABLE_BUTTON_12,    KC_MUTE,
                 PROGRAMMABLE_BUTTON_13,   PROGRAMMABLE_BUTTON_14,   PROGRAMMABLE_BUTTON_15,   PROGRAMMABLE_BUTTON_16
             ),
@@ -67,9 +67,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
        └───┴───┴───┴───┘
 */
     /*  Row:    0        1        2        3        4       */
-    [_FN] = LAYOUT(
+    [GAME] = LAYOUT(
                 KC_ESCAPE, KC_1, KC_2, KC_3, KC_TRNS,
-                KC_TAB, KC_Q, KC_W, KC_E, TO(_FN1),
+                KC_TAB, KC_Q, KC_W, KC_E, TO(CALL),
                 KC_R, KC_A, KC_S, KC_D, KC_GRAVE,
                 KC_LEFT_SHIFT, KC_LEFT_SHIFT, KC_SPACE, KC_SPACE
             ),
@@ -80,36 +80,50 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
        ├───┼───┼───┼───┤   └───┘ └───┘
        │ D │   │   │   │
        ├───┼───┼───┼───┤
-       │   │   │   │ H │      ┌───┐
+       │s+`│   │   │ H │      ┌───┐
        ├───┼───┼───┼───┤      │   │
-       │   │   │ Tv│ M │      └───┘
+       │s+t│   │ Tv│ M │      └───┘
        └───┴───┴───┴───┘
 */
     /*  Row:    0        1        2        3        4       */
-    [_FN1] = LAYOUT(
+    [CALL] = LAYOUT(
                 RCS(KC_H), RCS(KC_H), RCS(KC_U), RCS(KC_S), KC_TRNS,
-                RCS(KC_D), _______, _______, _______, TO(_FN2),
-                _______, _______, _______, RCS(KC_K), KC_MUTE,
-                _______, _______, RCS(KC_O), RCS(KC_M)
+                RCS(KC_D), _______, _______, _______, TO(CODE),
+                LSFT(KC_GRAVE), _______, _______, RCS(KC_K), KC_MUTE,
+                LSFT(KC_TAB), _______, RCS(KC_O), RCS(KC_M)
             ),
 
 /*
+    //    ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
+    //    │Spi│Spd│   │   │   │   │ │TO0│
+    //    ├───┼───┼───┼───┤   └───┘ └───┘
+    //    │Sai│Sad│   │   │
+    //    ├───┼───┼───┼───┤
+    //    │Tog│Mod│Hui│   │      ┌───┐
+    //    ├───┼───┼───┼───┤      │   │
+    //    │   │Vai│Hud│Vad│      └───┘
+    //    └───┴───┴───┴───┘
        ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
-       │Spi│Spd│   │   │   │   │ │TO0│
+       │dbg│stp│ re│flh│   │Ply│ │TO0│
        ├───┼───┼───┼───┤   └───┘ └───┘
-       │Sai│Sad│   │   │
+       │   │   │   │   │
        ├───┼───┼───┼───┤
-       │Tog│Mod│Hui│   │      ┌───┐
+       │cnt│ovr│ in│out│      ┌───┐
        ├───┼───┼───┼───┤      │   │
-       │   │Vai│Hud│Vad│      └───┘
+       │   │   │   │   │      └───┘
        └───┴───┴───┴───┘
 */
     /*  Row:    0        1        2        3        4        */
-    [_FN2] = LAYOUT(
-                RGB_SPI, RGB_SPD, _______, QK_BOOT, KC_TRNS,
-                RGB_SAI, RGB_SAD, _______, _______, TO(_BASE),
-                RGB_TOG, RGB_MOD, RGB_HUI, _______, KC_TRNS,
-                _______, RGB_VAI, RGB_HUD, RGB_VAD
+    [CODE] = LAYOUT(
+                // RGB_SPI, RGB_SPD, _______, QK_BOOT, KC_TRNS,
+                // RGB_SAI, RGB_SAD, _______, _______, TO(_BASE),
+                // RGB_TOG, RGB_MOD, RGB_HUI, _______, KC_TRNS,
+                // _______, RGB_VAI, RGB_HUD, RGB_VAD
+
+                KC_F5, LSFT(KC_F5), RCS(KC_F5), QK_BOOT, KC_TRNS,
+                _______, _______, _______, _______, TO(_BASE),
+                KC_F5, KC_F10, KC_F11, LSFT(KC_F11), KC_TRNS,
+                _______, _______, _______, _______
             ),
 };
 
@@ -121,10 +135,26 @@ void keyboard_post_init_user(void) {
 #endif
 }
 
+static bool debug = false;
+static bool last_debug = false;
+
+static uint8_t led_value = 0;
+static uint8_t pulse_delta = 1;
+static uint8_t wait = 0;
 
 #ifdef OLED_ENABLE
     uint8_t last_mode = 1;
     bool oled_task_user(void) {
+        if (led_value == 255) {
+            pulse_delta = -1;
+        } else if (led_value == 0) {
+            pulse_delta = 1;
+        }
+        wait += 1;
+        if (wait % 16 == 0) {
+            led_value += pulse_delta;
+            wait = 0;
+        }
         switch (biton32(layer_state)) {
             case _BASE:
                 if (last_mode != _BASE) {
@@ -133,27 +163,72 @@ void keyboard_post_init_user(void) {
                     oled_set_cursor(27, 0);
                     oled_write_P(PSTR("Macros"), false);
                     oled_render();
+                    rgb_matrix_mode(2);
                 }
                 break;
-            case _FN:
-                render_bongocat();
+            case GAME:
+                if (last_mode != GAME) {
+                    last_mode = GAME;
+
+                    oled_clear();
+                    oled_set_cursor(27, 0);
+                    oled_write_P(PSTR("Gayme"), false);
+                    oled_render();
+                    rgb_matrix_mode(RGB_MATRIX_CUSTOM_gaming);
+
+                }
+                // render_bongocat();
                 break;
-            case _FN1:
-                if (last_mode != _FN1) {
-                    last_mode = _FN1;
+            case CALL:
+                if (last_mode != CALL) {
+                    last_mode = CALL;
                     oled_clear();
                     oled_set_cursor(28, 0);
                     oled_write_P(PSTR("Calls"), false);
                     oled_render();
+                    rgb_matrix_mode(RGB_MATRIX_CUSTOM_chatting);
                 }
                 break;
-            case _FN2:
-                if (last_mode != _FN2) {
-                    last_mode = _FN2;
+            case CODE:
+                if (last_mode != CODE) {
+                    last_mode = CODE;
                     oled_clear();
                     oled_set_cursor(27, 0);
-                    oled_write_P(PSTR("Lights"), false);
+                    oled_write_P(PSTR("code"), false);
                     oled_render();
+                    rgb_matrix_mode(RGB_MATRIX_CUSTOM_none);
+                    
+                    for (uint8_t i = 0; i < 16; i++) {
+                        rgb_matrix_set_color(i, 0x00, 0x00, 0x00);
+                    }
+                } else if (debug != last_debug) {
+                    last_debug = debug;
+                    if (debug) {
+                        rgb_matrix_set_color(0, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(1, 0xff, 0x00, 0x00);
+                        rgb_matrix_set_color(2, 0xff, 0xff, 0x00);
+                        rgb_matrix_set_color(3, 0x00, 0x00, 0x00);
+
+                        rgb_matrix_set_color(8, 0x00, led_value, 0x00);
+                        rgb_matrix_set_color(9, led_value, led_value, 0x00);
+                        rgb_matrix_set_color(10, 0x00, 0x00, led_value);
+                        rgb_matrix_set_color(11, 0x88, 0x88, 0x88);
+                    } else {
+                        rgb_matrix_set_color(0, 0x00, 0xff, 0x00);
+                        rgb_matrix_set_color(1, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(2, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(3, 0x00, 0x00, 0x00);
+
+                        rgb_matrix_set_color(8, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(9, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(10, 0x00, 0x00, 0x00);
+                        rgb_matrix_set_color(11, 0x00, 0x00, 0x00);
+                    }
+                } else if (debug) {
+                    rgb_matrix_set_color(8, 0x00, led_value, 0x00);
+                    rgb_matrix_set_color(9, led_value, led_value, 0x00);
+                    rgb_matrix_set_color(10, 0x00, 0x00, led_value);
+                    rgb_matrix_set_color(11, led_value / 2, led_value / 2, led_value / 2);
                 }
                 break;
             default:
@@ -162,11 +237,28 @@ void keyboard_post_init_user(void) {
     }
 #endif
 
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case KC_F5:
+        case LSFT(KC_F5):
+            if (record->event.pressed) {
+                // toggle mute
+                debug = !debug;
+            } else {
+                // Do something else when release
+            }
+        return false;
+        default:
+            return true;  // Process all other keycodes normally
+    }
+}
+
 #ifdef ENCODER_MAP_ENABLE
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [_BASE] = { ENCODER_CCW_CW(KC_MPRV, KC_MNXT), ENCODER_CCW_CW(KC_PGDN, KC_PGUP), ENCODER_CCW_CW(KC_VOLU, KC_VOLD) },
-    [_FN]   = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
-    [_FN1]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
-    [_FN2]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
+    [GAME]   = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
+    [CALL]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
+    [CODE]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
 };
 #endif
