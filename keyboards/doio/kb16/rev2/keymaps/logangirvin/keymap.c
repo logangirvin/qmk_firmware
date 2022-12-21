@@ -27,9 +27,17 @@
 
 enum layer_names {
     _BASE,
+    MUSIC,
     GAME,
     CALL,
     CODE
+};
+
+enum my_keycodes {
+  GO_HOME = SAFE_RANGE,
+  GO_EXPLORE,
+  GO_LIBRARY,
+  GO_SETTINGS
 };
 
 // enum layer_keycodes { };
@@ -50,11 +58,29 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*  Row:    0                         1                         2                         3                         4      */
     [_BASE] = LAYOUT(
                 PROGRAMMABLE_BUTTON_1,    PROGRAMMABLE_BUTTON_2,    PROGRAMMABLE_BUTTON_3,    PROGRAMMABLE_BUTTON_4,     KC_MPLY,
-                PROGRAMMABLE_BUTTON_5,    PROGRAMMABLE_BUTTON_6,    PROGRAMMABLE_BUTTON_7,    PROGRAMMABLE_BUTTON_8,     TO(GAME),
+                PROGRAMMABLE_BUTTON_5,    PROGRAMMABLE_BUTTON_6,    PROGRAMMABLE_BUTTON_7,    PROGRAMMABLE_BUTTON_8,     TO(MUSIC),
                 PROGRAMMABLE_BUTTON_9,    PROGRAMMABLE_BUTTON_10,   PROGRAMMABLE_BUTTON_11,   PROGRAMMABLE_BUTTON_12,    KC_MUTE,
                 PROGRAMMABLE_BUTTON_13,   PROGRAMMABLE_BUTTON_14,   PROGRAMMABLE_BUTTON_15,   PROGRAMMABLE_BUTTON_16
             ),
 
+/* choose your own key bindings per program
+       ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
+       │ k │ ; │ j │ + │   │Ply│ │TO1│
+       ├───┼───┼───┼───┤   └───┘ └───┘
+       │ m │ s │ r │   │
+       ├───┼───┼───┼───┤
+       │ f │ q │   │   │      ┌───┐
+       ├───┼───┼───┼───┤      │Mut│
+       │ gh│ ge│ gl│ g.│      └───┘
+       └───┴───┴───┴───┘
+*/
+    /*  Row:    0                         1                         2                         3                         4      */
+    [MUSIC] = LAYOUT(
+                KC_K,    KC_SEMICOLON,    KC_J,    KC_PLUS,     KC_MPLY,
+                KC_M,    KC_S,    KC_R,    XXXXXXX,     TO(GAME),
+                KC_F,    KC_Q,   XXXXXXX,   XXXXXXX,    KC_MUTE,
+                GO_HOME,   GO_EXPLORE,   GO_LIBRARY,   GO_SETTINGS
+            ),
 /* Emulates left hand gaming
        ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
        │esc│ 1 │ 2 │ 3 │   │   │ │   │
@@ -166,6 +192,15 @@ static uint8_t wait = 0;
                     rgb_matrix_mode(2);
                 }
                 break;
+            case MUSIC:
+                if (last_mode != MUSIC) {
+                    last_mode = MUSIC;
+                    oled_clear();
+                    oled_set_cursor(27, 0);
+                    oled_write_P(PSTR("Music"), false);
+                    oled_render();
+                }
+                break;
             case GAME:
                 if (last_mode != GAME) {
                     last_mode = GAME;
@@ -248,7 +283,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else {
                 // Do something else when release
             }
-        return false;
+            return true;
+        case GO_HOME:
+            SEND_STRING("gh");
+            return false;
+        case GO_EXPLORE:
+            SEND_STRING("ge");
+            return false;
+        case GO_LIBRARY:
+            SEND_STRING("gl");
+            return false;
+        case GO_SETTINGS:
+            SEND_STRING("g.");
+            return false;
         default:
             return true;  // Process all other keycodes normally
     }
@@ -257,6 +304,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef ENCODER_MAP_ENABLE
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [_BASE] = { ENCODER_CCW_CW(KC_MPRV, KC_MNXT), ENCODER_CCW_CW(KC_PGDN, KC_PGUP), ENCODER_CCW_CW(KC_VOLU, KC_VOLD) },
+    [MUSIC] = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
     [GAME]   = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
     [CALL]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
     [CODE]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
