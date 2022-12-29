@@ -28,6 +28,7 @@
 enum layer_names {
     _BASE,
     MUSIC,
+    KRITA,
     GAME,
     CALL,
     CODE
@@ -77,9 +78,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*  Row:    0                         1                         2                         3                         4      */
     [MUSIC] = LAYOUT(
                 KC_K,    KC_SEMICOLON,    KC_J,    KC_PLUS,     KC_MPLY,
-                KC_M,    KC_S,    KC_R,    XXXXXXX,     TO(GAME),
+                KC_M,    KC_S,    KC_R,    XXXXXXX,     TO(KRITA),
                 KC_F,    KC_Q,   XXXXXXX,   XXXXXXX,    KC_MUTE,
                 GO_HOME,   GO_EXPLORE,   GO_LIBRARY,   GO_SETTINGS
+            ),
+
+/* choose your own key bindings per program
+       ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
+       │ca0│ca1│ca2│ca3│   │Ply│ │whl│ zoom
+       ├───┼───┼───┼───┤   └───┘ └───┘
+       │ m │c0 │csz│cz │
+       ├───┼───┼───┼───┤
+       │csa│ch │ l │ p │      ┌───┐
+       ├───┼───┼───┼───┤      │456│ rotate canvas
+       │ e │ ct│ t │ b │      └───┘
+       └───┴───┴───┴───┘
+*/
+    /*  Row:    0                         1                         2                         3                         4      */
+    [KRITA] = LAYOUT(
+                LCA(KC_0),    LCA(KC_1),    LCA(KC_2),    LCA(KC_3),     KC_MPLY,
+                KC_M,    LCTL(KC_0),    RCS(KC_Z),   LCTL(KC_Z),     TO(GAME),
+                RCS(KC_A),    LCTL(KC_H),   KC_L,   KC_P,    KC_5,
+                KC_E,   LCTL(KC_T),   KC_T,   KC_B
             ),
 /* Emulates left hand gaming
        ┌───┬───┬───┬───┐   ┌───┐ ┌───┐
@@ -201,6 +221,15 @@ static uint8_t wait = 0;
                     oled_render();
                 }
                 break;
+            case KRITA:
+                if (last_mode != KRITA) {
+                    last_mode = KRITA;
+                    oled_clear();
+                    oled_set_cursor(27, 0);
+                    oled_write_P(PSTR("Krita"), false);
+                    oled_render();
+                }
+                break;
             case GAME:
                 if (last_mode != GAME) {
                     last_mode = GAME;
@@ -305,7 +334,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [_BASE] = { ENCODER_CCW_CW(KC_MPRV, KC_MNXT), ENCODER_CCW_CW(KC_PGDN, KC_PGUP), ENCODER_CCW_CW(KC_VOLU, KC_VOLD) },
     [MUSIC] = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
-    [GAME]   = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
+    [KRITA] = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_MS_WH_UP, KC_MS_WH_DOWN), ENCODER_CCW_CW(KC_4, KC_6) }, 
+    [GAME]   = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_PGDN, KC_PGUP), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
     [CALL]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
     [CODE]  = { ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS), ENCODER_CCW_CW(KC_TRNS, KC_TRNS) },
 };
