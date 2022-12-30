@@ -91,14 +91,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
        ├───┼───┼───┼───┤
        │csa│ch │ l │ p │      ┌───┐
        ├───┼───┼───┼───┤      │456│ rotate canvas
-       │ e │ ct│ t │ b │      └───┘
+       │ e │ ct│ t │ b │      └───┘ hold canvas
        └───┴───┴───┴───┘
 */
     /*  Row:    0                         1                         2                         3                         4      */
     [KRITA] = LAYOUT(
                 LCA(KC_0),    LCA(KC_1),    LCA(KC_2),    LCA(KC_3),     KC_MPLY,
                 KC_M,    LCTL(KC_0),    RCS(KC_Z),   LCTL(KC_Z),     TO(GAME),
-                RCS(KC_A),    LCTL(KC_H),   KC_L,   KC_P,    KC_5,
+                RCS(KC_A),    LCTL(KC_H),   KC_L,   KC_P,    KC_SPACE,
                 KC_E,   LCTL(KC_T),   KC_T,   KC_B
             ),
 /* Emulates left hand gaming
